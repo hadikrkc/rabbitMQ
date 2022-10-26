@@ -1,10 +1,6 @@
 const amqp = require("amqplib")
-
-const message = {
-    description: "Bu bir test mesajidir.."
-}
-
 const queueName = process.argv[2] || "jobsQueue"
+const data = require("./data.json");
 
 connect_rabbitmq();
 
@@ -16,8 +12,13 @@ async function connect_rabbitmq(){
 
         console.log("Message waitnig ...")
         channel.consume(queueName, message => {
-            console.log("Message", message.content.toString());
-            channel.ack(message);
+            const messageInfo = JSON.parse(message.content.toString())
+            // {description: 12}
+            const userInfo = data.find(u => u.id == messageInfo.description)
+            if(userInfo){
+                console.log("Processed record:", userInfo );
+                channel.ack(message);
+            }
         })
 
     } catch (error) {
